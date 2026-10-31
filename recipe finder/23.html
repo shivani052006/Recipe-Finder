@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food Explorer - Recipe Finder</title>
+<link rel="icon" href="images/9.jpeg" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg-light: #fdf6e3;
+  --bg-dark: #1a1a1a;
+  --card-light: rgba(255, 255, 255, 0.9);
+  --card-dark: rgba(30, 30, 30, 0.9);
+  --text-light: #000;
+  --text-dark: #fff;
+  --accent: #ff5722;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0; padding: 0;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; transition: background 0.5s, color 0.5s;
+  background: var(--bg-light);
+  color: var(--text-light);
+}
+
+body.dark { background: var(--bg-dark); color: var(--text-dark); }
+
+header, nav, .recipes { position: relative; z-index: 1; }
+
+header {
+  font-size: 3em;
+  margin: 20px;
+  text-align: center;
+  color: var(--accent);
+  font-family: 'Pacifico', cursive;
+  position: relative;
+}
+
+nav {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  width: 100%;
+  padding: 10px 0;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+nav a {
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: bold;
+  color: var(--text-light);
+  transition: color 0.3s;
+  cursor:pointer;
+}
+
+nav a:hover { color: var(--accent); }
+
+.toggle-btn {
+  margin-left: 20px;
+  padding: 5px 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.search-box { margin: 20px; display: flex; justify-content: center; gap: 10px; }
+.search-box input {
+  padding: 12px; font-size: 1em;
+  border-radius: 20px; border: none; width: 250px; outline: none;
+}
+.search-box button {
+  padding: 12px 20px; font-size: 1em; border: none; border-radius: 20px;
+  background: var(--accent); color: white; cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+.search-box button:hover { background: #e64a19; transform: scale(1.1) rotate(-2deg); }
+
+.recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  width: 80%;
+  margin-top: 20px;
+}
+
+.card {
+  background: var(--card-light);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 15px;
+  text-align: center;
+  color: var(--text-light);
+  transition: transform 0.4s ease, background 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden; cursor: pointer;
+}
+body.dark .card { background: var(--card-dark); color: var(--text-dark); }
+
+.card:hover {
+  transform: translateY(-8px) scale(1.08);
+  background: rgba(255, 87, 34, 0.3);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.card img { width: 100%; border-radius: 15px; height:200px; object-fit: cover; }
+.card h3, .card p { margin: 5px 0; }
+
+.fav-btn {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background: #ff9800;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Recipe detail popup */
+#recipeDetail { display:none; 
+position:fixed; 
+top:0; left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.6); 
+ align-items:center; 
+ justify-content:center; 
+ z-index:999; }
+
+#recipeDetail > div {
+  background:#fff;
+  padding:20px;
+  border-radius:10px; 
+  max-width:500px; 
+  width:80%;
+  overflow-y:auto; 
+  max-height:90%;
+}
+#recipeDetail img { width:50%; border-radius:10px; margin-bottom:15px; }
+#recipeDetail button { margin-top:10px; padding:8px 15px; background: var(--accent); color:#fff; border:none; border-radius:6px; cursor:pointer; }
+#recipeDetail button:hover { background:#e64a19; }
+
+#about, #contact {
+  display:none; text-align:center;
+  padding:30px;
+  background:var(--card-light);
+  border-radius:15px;
+  margin:20px;
+  width:80%;
+  transition: background 0.5s, color 0.5s;
+}
+body.dark #about, body.dark #contact { background: var(--card-dark); color: var(--text-dark); }
+
+#about h2, #contact h2 { margin-bottom: 15px; color: var(--accent); }
+#about p, #contact p { margin-bottom: 10px; }
+
+.back-btn {
+  margin-top: 15px; padding: 8px 15px;
+  border: none; border-radius: 10px;
+  background: #ff5722; color: white;
+  cursor: pointer; display: none;
+}
+.back-btn:hover { background: #e64a19; }
+
+.homepage-content {
+  height: 100vh;
+  width: 100%;
+  background: url('images/9.jpg') no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  font-size: 1.5em;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.homepage-content .tagline {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* simple font */
+  font-size: 1.2em;           /* slightly smaller than heading */
+  font-weight: 400;           /* normal weight */
+  color: #ffffff;             /* white text on homepage image */
+  margin-top: 10px;           /* space below heading */
+  text-align: center;         /* center alignment */
+}
+
+</style>
+</head>
+<body>
+
+<header>🍴 Recipe Finder</header>
+
+<nav>
+  <a onclick="showHome()">Home</a>
+  <a onclick="showMainCategories()">Categories</a>
+  <a onclick="showAbout()">About</a>
+  <a onclick="showContact()">Contact</a>
+  <button class="toggle-btn" onclick="toggleDarkMode()">Dark Mode</button>
+</nav>
+
+<section id="home" class="homepage-content">
+  <h1>Welcome to Food Explorer</h1>
+    <p class="tagline">Your Kitchen Companion – Find Recipes, Cook Confidently!</p>
+</section>
+
+<div class="recipes" id="recipeList"></div>
+<button class="back-btn" id="backBtn" onclick="showMainCategories()">⬅ Back</button>
+
+<!-- Recipe detail popup -->
+<div id="recipeDetail">
+  <div>
+    <h2 id="detailName"></h2>
+    <img id="detailImg">
+    <p id="detailDesc"></p>
+    <h3>Ingredients</h3>
+    <ul id="detailIngredients"></ul>
+    <h3>Steps</h3>
+    <ol id="detailSteps"></ol>
+    <button onclick="closeDetail()">Close</button>
+  </div>
+</div>
+
+<!-- About Section -->
+<div id="about" style="text-align:center; padding:40px; max-width:800px; margin:0 auto; background: rgba(255,255,255,0.95); border-radius:15px;">
+  
+  <!-- Intro Paragraph -->
+  <p style="font-size:1.2em; line-height:1.6; margin-bottom:20px;">
+     <strong>Food Explorer</strong> is your ultimate kitchen companion! Find, save, and cook delicious recipes effortlessly — whether you’re a beginner or a seasoned chef.
+  </p>
+
+  <!-- Purpose / Mission -->
+  <p style="font-size:1.1em; line-height:1.6; margin-bottom:25px;">
+    Our goal is simple: <strong>make cooking easy, fun, and inspiring.</strong> Explore thousands of recipes across categories like Pizza, Cake, Pasta, Drinks, and more.
+  </p>
+
+  <!-- Key Features -->
+  <ul style="list-style:none; padding:0; font-size:1.1em; line-height:2; margin-bottom:25px;">
+    <li>⭐ Step-by-step instructions for every recipe</li>
+    <li>⭐ Save your favorite dishes</li>
+    <li>⭐Discover trending and classic recipes daily</li>
+  </ul>
+
+  <!-- Closing / Motivational Line -->
+  <p style="font-size:1.2em; font-weight:bold; color:#ff5722;">
+    Join Food Explorer and turn your kitchen into a hub of creativity and deliciousness! 
+  </p>
+  
+</div>
+
+
+<!-- Contact Section -->
+<div id="contact">
+  <h2>Contact Us</h2>
+  <p>📧 Email: support@foodexplorer.com</p>
+  <p>📞 Phone: +91 9970546490</p>
+  <p>💬 Feedback: We love hearing from you!</p>
+</div>
+
+<script>
+const categoryImages = {
+  pizza: "images/5.jpg",
+  cake: "images/3.jpg",
+  burger: "images/2.jpg",
+  drinks: "images/13.jpg",
+  pasta: "images/17.jpg",
+  icecream: "images/1.jpg"
+};
+
+const recipes = {
+  pizza: [{ name: "Cheese Pizza", img: "images/12.jpg", desc: "Classic cheese burst pizza 🧀🍕" },
+          { name: "Veggie Pizza", img: "images/11.jpg", desc: "Loaded with fresh veggies 🥦🍅🌽" }],
+  cake: [{ name: "Chocolate Cake", img: "images/4.jpg", desc: "Rich chocolate layered cake 🍫🍰" },
+         { name: "Vanilla Cake", img: "images/14.jpg", desc: "Soft and fluffy vanilla cake 🎂" }],
+  burger: [{ name: "Cheese Burger", img: "images/2.jpg", desc: "Juicy burger with cheese 🧀🍔" },
+           { name: "Veggie Burger", img: "images/15.jpg", desc: "Crispy veggie patty with sauces 🥗🍔" }],
+  drinks: [{ name: "Mango Shake", img: "images/13.jpg", desc: "Refreshing mango shake 🥭🥤" },
+           { name: "Cold Coffee", img: "images/8.jpg", desc: "Chilled coffee with cream ☕❄️" }],
+  pasta: [{ name: "White Sauce Pasta", img: "images/17.jpg", desc: "Creamy Italian delight 🍝" },
+          { name: "Red Sauce Pasta", img: "images/19.jpg", desc: "Tangy tomato-based pasta 🍅🍝" }],
+  icecream: [{ name: "Chocolate Ice Cream", img: "images/7.jpg", desc: "Creamy chocolate scoop 🍫🍦" },
+             { name: "Butterscotch Ice Cream", img: "images/1.jpg", desc: "Classic Butterscotch scoop 🍦" }]
+};
+
+const recipeDetails = {
+  "Cheese Pizza": {
+    img: "images/12.jpg",
+    desc: "Classic cheese burst pizza 🧀🍕",
+    ingredients: ["Cheese","Dough","Tomato Sauce","Oregano","Olives"],
+    steps: ["Prepare the dough","Spread tomato sauce","Add cheese","Bake at 200°C for 15 mins"]
+  },
+  "Veggie Pizza": {
+    img: "images/11.jpg",
+    desc: "Loaded with fresh veggies 🥦🍅🌽",
+    ingredients: ["Dough","Tomato Sauce","Cheese","Bell Peppers","Onions","Tomatoes"],
+    steps: ["Prepare the dough","Spread tomato sauce","Add cheese","Top with veggies","Bake at 200°C for 15 mins"]
+  },
+  "Chocolate Cake": {
+    img: "images/4.jpg",
+    desc: "Rich chocolate layered cake 🍫🍰",
+    ingredients: ["Flour","Sugar","Cocoa Powder","Eggs","Butter","Baking Powder"],
+    steps: ["Preheat oven to 180°C","Mix dry ingredients","Add wet ingredients","Bake 30 mins"]
+  },
+  "Vanilla Cake": {
+    img: "images/14.jpg",
+    desc: "Soft and fluffy vanilla cake 🎂",
+    ingredients: ["Flour","Sugar","Butter","Eggs","Milk","Baking Powder","Vanilla Extract","Salt"],
+    steps: ["Preheat oven to 180°C","Grease and flour cake pan","Mix butter and sugar","Add eggs and vanilla extract","Add flour, baking powder, salt, and milk","Pour batter into pan","Bake 30–35 mins","Cool before serving"]
+  },
+  "Cheese Burger": {
+    img: "images/2.jpg",
+    desc: "Juicy burger with cheese 🧀🍔",
+    ingredients: ["Burger Bun","Cheese Slice","Veggie Patty","Lettuce","Tomato"],
+    steps: ["Grill the patty","Toast the bun","Assemble burger","Add cheese & veggies"]
+  },
+  "Veggie Burger": {
+    img: "images/15.jpg",
+    desc: "Crispy veggie patty with sauces 🥗🍔",
+    ingredients: ["Burger Bun","Veggie Patty","Lettuce","Tomato","Cheese","Onion","Sauce"],
+    steps: ["Toast the bun","Grill the veggie patty","Place lettuce, tomato, onion on bun","Add patty and cheese","Top with sauce","Serve"]
+  },
+  "Mango Shake": {
+    img: "images/13.jpg",
+    desc: "Refreshing mango shake 🥭🥤",
+    ingredients: ["Mango","Milk","Ice Cream","Sugar"],
+    steps: ["Peel & chop mango","Blend mango with milk & sugar","Add ice cream","Serve chilled"]
+  },
+  "Cold Coffee": {
+    img: "images/8.jpg",
+    desc: "Chilled coffee with cream ☕❄️",
+    ingredients: ["Milk","Coffee Powder","Sugar","Ice Cubes","Ice Cream (optional)"],
+    steps: ["Add milk, coffee powder, sugar, and ice cubes in blender","Blend until frothy","Pour into glass","Top with ice cream if desired","Serve chilled"]
+  },
+  "White Sauce Pasta": {
+    img: "images/17.jpg",
+    desc: "Creamy Italian delight 🍝",
+    ingredients: ["Pasta","Cream","Butter","Garlic","Cheese"],
+    steps: ["Boil pasta","Prepare white sauce","Mix pasta with sauce","Serve hot"]
+  },
+  "Red Sauce Pasta": {
+    img: "images/19.jpg",
+    desc: "Tangy tomato-based pasta 🍅🍝",
+    ingredients: ["Pasta","Tomato Puree","Onion","Garlic","Olive Oil","Chili Flakes","Oregano","Salt"],
+    steps: ["Boil pasta until cooked","Heat olive oil and sauté onion & garlic","Add tomato puree, salt, chili flakes, oregano","Cook sauce until thick","Mix pasta with sauce","Serve hot"]
+  },
+  "Chocolate Ice Cream": {
+    img: "images/7.jpg",
+    desc: "Creamy chocolate scoop 🍫🍦",
+    ingredients: ["Milk","Sugar","Cocoa Powder","Cream","Vanilla Essence"],
+    steps: ["Mix ingredients","Churn in ice cream maker","Freeze 4-6 hours","Serve cold"]
+  },
+  "Butterscotch Ice Cream": {
+    img: "images/1.jpg",
+    desc: "Classic Butterscotch scoop 🍦",
+    ingredients: ["Milk","Sugar","Cream","Butterscotch Essence","Caramel Crunch"],
+    steps: ["Boil milk and sugar, let cool","Add cream and butterscotch essence","Whisk until smooth","Freeze mixture for few hours","Stir in caramel crunch","Freeze again until set","Scoop and serve"]
+  }
+};
+
+let favorites = [];
+
+function showHome() {
+  document.getElementById("home").style.display="flex";
+  document.getElementById("recipeList").style.display="none";
+  document.getElementById("about").style.display="none";
+  document.getElementById("contact").style.display="none";
+  document.getElementById("recipeDetail").style.display="none";
+  document.getElementById("backBtn").style.display="none";
+}
+
+function showMainCategories() {
+  document.getElementById("home").style.display="none";
+  document.getElementById("about").style.display = "none";
+  document.getElementById("contact").style.display = "none";
+  document.getElementById("recipeDetail").style.display = "none";
+
+  const recipeList = document.getElementById("recipeList");
+  recipeList.style.display = "grid";
+  recipeList.innerHTML = "";
+
+  recipeList.innerHTML += `
+    <div class="search-box" style="grid-column:1/-1; justify-content:center;">
+      <input type="text" id="searchInput" list="suggestions" placeholder="Search for a recipe...">
+      <datalist id="suggestions">
+        <option value="Pizza"><option value="Cake"><option value="Burger"><option value="Drinks"><option value="Pasta"><option value="Ice Cream">
+      </datalist>
+      <button onclick="searchRecipe()">Search</button>
+    </div>
+  `;
+
+  for (const key in recipes) {
+    const img = categoryImages[key];
+    recipeList.innerHTML += `
+      <div class="card" onclick="showSubRecipes('${key}')">
+        <img src="${img}" alt="${key}">
+        <h3>${key.charAt(0).toUpperCase() + key.slice(1)}</h3>
+      </div>
+    `;
+  }
+  document.getElementById("backBtn").style.display="none";
+}
+
+function showSubRecipes(category){
+  const recipeList = document.getElementById("recipeList");
+  recipeList.innerHTML = "";
+  recipes[category].forEach(r=>{
+    const favText = favorites.includes(r.name)?"★ Remove Favorite":"☆ Add to Favorite";
+    recipeList.innerHTML += `
+      <div class="card">
+        <img src="${r.img}" alt="${r.name}">
+        <h3>${r.name}</h3>
+        <p>${r.desc}</p>
+        <button onclick="viewDetails('${r.name}')">View Details</button>
+        <button class="fav-btn" onclick="toggleFavorite('${r.name}',event)">${favText}</button>
+      </div>
+    `;
+  });
+  document.getElementById("backBtn").style.display="inline-block";
+}
+
+function toggleFavorite(name,event){
+  event.stopPropagation();
+  if(favorites.includes(name)) favorites=favorites.filter(f=>f!==name);
+  else favorites.push(name);
+  alert(`${name} ${favorites.includes(name)?"added to":"removed from"} favorites!`);
+  showMainCategories();
+}
+
+function searchRecipe(){
+  const query = document.getElementById("searchInput").value.toLowerCase().trim();
+  const recipeList = document.getElementById("recipeList");
+  recipeList.innerHTML="";
+  let found=false;
+  for(const cat in recipes){
+    recipes[cat].forEach(r=>{
+      if(r.name.toLowerCase().includes(query)){
+        const favText = favorites.includes(r.name)?"★ Remove Favorite":"☆ Add to Favorite";
+        recipeList.innerHTML += `
+        <div class="card">
+          <img src="${r.img}" alt="${r.name}">
+          <h3>${r.name}</h3>
+          <p>${r.desc}</p>
+          <button onclick="viewDetails('${r.name}')">View Details</button>
+          <button class="fav-btn" onclick="toggleFavorite('${r.name}',event)">${favText}</button>
+        </div>
+        `;
+        found=true;
+      }
+    });
+  }
+  if(!found){
+    recipeList.innerHTML=`<p style="color:black;text-align:center;grid-column:1/-1;">❌ Recipe not found.</p>`;
+  }
+  document.getElementById("backBtn").style.display="inline-block";
+}
+
+function viewDetails(name){
+  const r = recipeDetails[name];
+  document.getElementById("detailName").textContent = name;
+  document.getElementById("detailImg").src = r.img;
+  document.getElementById("detailDesc").textContent = r.desc || "";
+  document.getElementById("detailIngredients").innerHTML = r.ingredients.map(i => `<li>${i}</li>`).join('');
+  document.getElementById("detailSteps").innerHTML = r.steps.map(s => `<li>${s}</li>`).join('');
+  document.getElementById("recipeDetail").style.display = "flex";
+}
+
+function closeDetail() { document.getElementById("recipeDetail").style.display = "none"; }
+function showAbout() { document.getElementById("recipeList").style.display = "none"; document.getElementById("about").style.display = "block"; document.getElementById("contact").style.display = "none"; document.getElementById("backBtn").style.display="inline-block"; }
+function showContact() { document.getElementById("recipeList").style.display = "none"; document.getElementById("contact").style.display = "block"; document.getElementById("about").style.display = "none"; document.getElementById("backBtn").style.display="inline-block"; }
+function toggleDarkMode() { document.body.classList.toggle("dark"); }
+
+showHome();
+</script>
+
+</body>
+</html>
